@@ -79,3 +79,7 @@ path = "../examples/multi_inputs.rs"
 [[example]]
 name = "external_inputs"
 path = "../examples/external_inputs.rs"
+
+[[example]]
+name = "chacha20_folding"
+path = "../examples/chacha20_folding.rs"
