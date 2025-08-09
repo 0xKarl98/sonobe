@@ -41,6 +41,7 @@ num-bigint = { workspace = true, features = ["rand"] }
 # for benchmarks
 criterion = { workspace = true }
 pprof = { workspace = true, features = ["criterion", "flamegraph"] }
+experimental-frontends = { path = "../experimental-frontends" }
 
 # This allows the crate to be built when targeting WASM.
 # See more at: https://docs.rs/getrandom/#webassembly-support 
@@ -68,6 +69,7 @@ name = "protogalaxy"
 path = "../benches/protogalaxy.rs"
 harness = false
 
+
 [[example]]
 name = "sha256"
 path = "../examples/sha256.rs"
@@ -81,5 +83,13 @@ name = "external_inputs"
 path = "../examples/external_inputs.rs"
 
 [[example]]
+name = "chacha20_performance_test"
+path = "../examples/chacha20_performance_test.rs"
+
+[[example]]
 name = "chacha20_folding"
 path = "../examples/chacha20_folding.rs"
+
+[[example]]
+name = "chacha20_noir_folding"
+path = "../examples/chacha20_noir_folding.rs"
