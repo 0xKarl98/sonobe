@@ -421,6 +421,159 @@ pub mod tests {
     use ark_r1cs_std::R1CSVar;
     use ark_relations::r1cs::ConstraintSystem;
 
+    /// Test Quarter Round operation from RFC 7539 Section 2.1.1
+    #[test]
+    fn test_quarter_round_rfc7539() -> Result<(), Error> {
+        let cs = ConstraintSystem::<Fr>::new_ref();
+        let circuit = ChaCha20FCircuit::<Fr>::new(())?;
+        
+        // RFC 7539 Section 2.1.1 test vector
+        let a = 0x11111111u32;
+        let b = 0x01020304u32;
+        let c = 0x9b8d6f43u32;
+        let d = 0x01234567u32;
+        
+        // Expected results from RFC 7539
+        let expected_a = 0xea2a92f4u32;
+        let expected_b = 0xcb1cf8ceu32;
+        let expected_c = 0x4581472eu32;
+        let expected_d = 0x5881c4bbu32;
+        
+        // Test circuit quarter round
+        let a_var = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(a)))?;
+        let b_var = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(b)))?;
+        let c_var = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(c)))?;
+        let d_var = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(d)))?;
+        
+        let (result_a, result_b, result_c, result_d) = circuit.quarter_round(
+            cs.clone(),
+            &a_var,
+            &b_var,
+            &c_var,
+            &d_var,
+        )?;
+        
+        assert_eq!(result_a.value()?, Fr::from(expected_a));
+        assert_eq!(result_b.value()?, Fr::from(expected_b));
+        assert_eq!(result_c.value()?, Fr::from(expected_c));
+        assert_eq!(result_d.value()?, Fr::from(expected_d));
+        
+        println!("✅ Quarter Round RFC 7539 test passed!");
+        Ok(())
+    }
+    
+    /// Test Quarter Round on ChaCha State from RFC 7539 Section 2.2.1
+    #[test]
+    fn test_quarter_round_on_state_rfc7539() -> Result<(), Error> {
+        let cs = ConstraintSystem::<Fr>::new_ref();
+        let circuit = ChaCha20FCircuit::<Fr>::new(())?;
+        
+        // RFC 7539 Section 2.2.1 test vector
+        // Testing QUARTERROUND(2,7,8,13) operation
+        let a = 0x516461b1u32;  // position 2
+        let b = 0x2a5f714cu32;  // position 7
+        let c = 0x53372767u32;  // position 8
+        let d = 0x3d631689u32;  // position 13
+        
+        // Expected results from RFC 7539
+        let expected_a = 0xbdb886dcu32;
+        let expected_b = 0xcfacafd2u32;
+        let expected_c = 0xe46bea80u32;
+        let expected_d = 0xccc07c79u32;
+        
+        // Test circuit quarter round
+        let a_var = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(a)))?;
+        let b_var = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(b)))?;
+        let c_var = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(c)))?;
+        let d_var = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(d)))?;
+        
+        let (result_a, result_b, result_c, result_d) = circuit.quarter_round(
+            cs.clone(),
+            &a_var,
+            &b_var,
+            &c_var,
+            &d_var,
+        )?;
+        
+        assert_eq!(result_a.value()?, Fr::from(expected_a));
+        assert_eq!(result_b.value()?, Fr::from(expected_b));
+        assert_eq!(result_c.value()?, Fr::from(expected_c));
+        assert_eq!(result_d.value()?, Fr::from(expected_d));
+        
+        println!("✅ Quarter Round on State RFC 7539 test passed!");
+        Ok(())
+    }
+    
+    /// Test Quarter Round with overflow cases
+    #[test]
+    fn test_quarter_round_overflow() -> Result<(), Error> {
+        let cs = ConstraintSystem::<Fr>::new_ref();
+        let circuit = ChaCha20FCircuit::<Fr>::new(())?;
+        
+        // Test case where a + b would overflow u32
+        let a = 0xFFFFFFFFu32; // Maximum u32 value
+        let b = 0x00000001u32; // Adding 1 would overflow
+        let c = 0x00000000u32;
+        let d = 0x00000000u32;
+        
+        // Expected results (calculated manually)
+        let expected_a = 0x00001000u32;
+        let expected_b = 0x08080000u32;
+        let expected_c = 0x00100000u32;
+        let expected_d = 0x00100000u32;
+        
+        // Test circuit quarter round
+        let a_var = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(a)))?;
+        let b_var = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(b)))?;
+        let c_var = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(c)))?;
+        let d_var = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(d)))?;
+        
+        let (result_a, result_b, result_c, result_d) = circuit.quarter_round(
+            cs.clone(),
+            &a_var,
+            &b_var,
+            &c_var,
+            &d_var,
+        )?;
+        
+        assert_eq!(result_a.value()?, Fr::from(expected_a));
+        assert_eq!(result_b.value()?, Fr::from(expected_b));
+        assert_eq!(result_c.value()?, Fr::from(expected_c));
+        assert_eq!(result_d.value()?, Fr::from(expected_d));
+        
+        println!("✅ Quarter Round overflow test passed!");
+        Ok(())
+    }
+    
+    /// Test ChaCha20 Block Function from RFC 7539 Section 2.3.2
+    #[test]
+    fn test_chacha20_block_function_rfc7539() -> Result<(), Error> {
+        // Test the native implementation with RFC 7539 test vector
+        let key = [
+            0x03020100, 0x07060504, 0x0b0a0908, 0x0f0e0d0c,
+            0x13121110, 0x17161514, 0x1b1a1918, 0x1f1e1d1c,
+        ];
+        let nonce = [0x09000000, 0x4a000000, 0x00000000];
+        let counter = 0x00000001u32;
+        
+        // Expected result from RFC 7539 Section 2.3.2
+        let expected_result = [
+            0xe4e7f110, 0x15593bd1, 0x1fdd0f50, 0xc47120a3,
+            0xc7f4d1c7, 0x0368c033, 0x9aaa2204, 0x4e6cd4c3,
+            0x466482d2, 0x09aa9f07, 0x05d7c214, 0xa2028bd9,
+            0xd19c12b5, 0xb94e16de, 0xe883d0cb, 0x4e3c50a2,
+        ];
+        
+        let result = chacha20_block_native(key, nonce, counter);
+        
+        for i in 0..16 {
+            assert_eq!(result[i], expected_result[i], "Mismatch at position {}", i);
+        }
+        
+        println!("✅ ChaCha20 Block Function RFC 7539 test passed!");
+        Ok(())
+    }
+
     #[test]
     fn test_chacha20_f_circuit() -> Result<(), Error> {
         let cs = ConstraintSystem::<Fr>::new_ref();
