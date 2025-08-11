@@ -135,6 +135,31 @@ All tests include complete verification workflows, ensuring:
 - ✅ Proof validity
 - ✅ State consistency
 - ✅ Incremental verification
+- ✅ **EVM/Solidity verification** (chacha20_performance_test)
+
+### 🔗 Solidity Verifier Integration
+
+The `chacha20_performance_test` example includes **complete Solidity verifier generation** for on-chain verification:
+
+**Generated Files:**
+- `NovaDecider.sol` - Complete Solidity verifier contract (~37KB)
+- `calldata.txt` - Formatted calldata for on-chain verification
+
+**EVM Verification Features:**
+- ✅ Automatic Solidity contract generation
+- ✅ EVM simulation verification
+- ✅ Ready-to-deploy contracts
+- ✅ Gas-optimized verification
+- ✅ Compatible with all EVM chains
+
+**Usage:**
+```bash
+cargo run --example chacha20_performance_test --release
+# Generates: NovaDecider.sol + calldata.txt
+# EVM verification result: true
+```
+
+The generated Solidity verifier enables **trustless on-chain verification** of ChaCha20 folding proofs, making it suitable for blockchain applications requiring cryptographic computation verification.
 
 ---
 

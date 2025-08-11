@@ -32,16 +32,25 @@ pub fn save_solidity(name: impl AsRef<str>, solidity: &str) {
 /// # Panics
 /// Panics if executable `solc` can not be found, or compilation fails.
 pub fn compile_solidity(solidity: impl AsRef<[u8]>, contract_name: &str) -> Vec<u8> {
-    let mut process = match Command::new("solc")
-        .stdin(Stdio::piped())
+    // Create a temporary file for solcjs compatibility
+    let temp_file = std::env::temp_dir().join("temp_contract.sol");
+    std::fs::write(&temp_file, solidity.as_ref()).unwrap();
+    
+    // Create temporary output directory
+    let temp_output_dir = std::env::temp_dir().join("solc_output");
+    let _ = std::fs::create_dir_all(&temp_output_dir);
+    
+    let output = match Command::new("solc")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .arg("--bin")
         .arg("--optimize")
-        .arg("-")
-        .spawn()
+        .arg("-o")
+        .arg(&temp_output_dir)
+        .arg(&temp_file)
+        .output()
     {
-        Ok(process) => process,
+        Ok(output) => output,
         Err(err) if err.kind() == io::ErrorKind::NotFound => {
             panic!("Command 'solc' not found");
         }
@@ -49,22 +58,55 @@ pub fn compile_solidity(solidity: impl AsRef<[u8]>, contract_name: &str) -> Vec<
             panic!("Failed to spawn process with command 'solc':\n{err}");
         }
     };
-    process
-        .stdin
-        .take()
-        .unwrap()
-        .write_all(solidity.as_ref())
-        .unwrap();
-    let output = process.wait_with_output().unwrap();
-    let stdout = str::from_utf8(&output.stdout).unwrap();
-    if let Some(binary) = find_binary(stdout, contract_name) {
-        binary
-    } else {
+    
+    if !output.status.success() {
+        // Clean up temporary files
+        let _ = std::fs::remove_file(&temp_file);
+        let _ = std::fs::remove_dir_all(&temp_output_dir);
         panic!(
             "Compilation fails:\n{}",
             str::from_utf8(&output.stderr).unwrap()
-        )
+        );
     }
+    
+    // Read the generated binary file
+    // solcjs generates files with pattern: {full_path_with_underscores}_{contractname}.bin
+    let temp_file_str = temp_file.to_string_lossy();
+    let bin_file_name = format!("{}_{}.bin", 
+        temp_file_str.replace('.', "_").replace('/', "_").replace('\\', "_"), 
+        contract_name);
+    let bin_file_path = temp_output_dir.join(&bin_file_name);
+    
+    let binary_hex = match std::fs::read_to_string(&bin_file_path) {
+        Ok(content) => content.trim().to_string(),
+        Err(_) => {
+            // Debug: list all files in the output directory
+            if let Ok(entries) = std::fs::read_dir(&temp_output_dir) {
+                eprintln!("Files in output directory:");
+                for entry in entries {
+                    if let Ok(entry) = entry {
+                        eprintln!("  {}", entry.file_name().to_string_lossy());
+                    }
+                }
+            }
+            eprintln!("Expected file name: {}", bin_file_name);
+            eprintln!("Temp file path: {:?}", temp_file);
+            
+            // Clean up temporary files
+            let _ = std::fs::remove_file(&temp_file);
+            let _ = std::fs::remove_dir_all(&temp_output_dir);
+            panic!("Failed to read compiled binary file: {}", bin_file_name);
+        }
+    };
+    
+    // Clean up temporary files
+    let _ = std::fs::remove_file(&temp_file);
+    let _ = std::fs::remove_dir_all(&temp_output_dir);
+    
+    // Convert hex string to bytes
+    hex::decode(&binary_hex).unwrap_or_else(|_| {
+        panic!("Failed to decode hex binary: {}", binary_hex);
+    })
 }
 
 /// Find binary from `stdout` with given `contract_name`.
