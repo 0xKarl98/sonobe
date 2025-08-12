@@ -20,7 +20,6 @@ This project demonstrates how to integrate ChaCha20 Noir circuits with Sonobe fo
 ### 1. Run Basic Nova Folding Scheme
 
 ```bash
-cd /Users/yuhang/sonobe
 cargo run --example chacha20_performance_test
 ```
 
@@ -33,6 +32,8 @@ If you want complete Solidity verifier functionality, install the Solidity compi
 npm install -g solc
 
 # Then uncomment Solidity-related code in chacha20_performance_test.rs
+# Currently they have been activated  
+
 ```
 
 ## Performance Comparison
