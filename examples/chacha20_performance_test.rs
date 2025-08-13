@@ -224,14 +224,16 @@ fn main() -> Result<(), Error> {
     println!("| Barretenberg (Noir)          | ~70.0 seconds    |");
     println!("| Gnark                        | ~3.0 seconds     |");
     println!("| Expander (Multi-thread)      | ~5.0 seconds     |");
-    println!("| **Noir + Sonobe Folding**    | **{:.1} seconds**   |", total_prove_time.as_secs_f64());
+    // Complete proof generation time = IVC folding + Decider proving
+    let complete_proving_time = total_prove_time.as_secs_f64() + decider_prove_time.as_secs_f64();
+    println!("| **Noir + Sonobe Folding**    | **{:.1} seconds**   |", complete_proving_time);
     println!("==========================================\n");
     
     // Calculate speedup
     let barretenberg_time = 70.0;
     let gnark_time = 3.0;
     let expander_time = 5.0;
-    let folding_time = total_prove_time.as_secs_f64();
+    let folding_time = complete_proving_time;
     
     println!("🚀 Speedup Analysis (Noir + Sonobe Folding vs Traditional):");
     if folding_time < barretenberg_time {

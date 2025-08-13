@@ -43,9 +43,9 @@ Performance test results based on 8 ChaCha20 proofs:
 | ZK Proof System | Time (8 proofs) | Relative Performance |
 |----------------|-----------------|---------------------|
 | Barretenberg (Noir) | ~70.0 seconds | Baseline |
-| **Noir + Sonobe Folding** | **~23.0 seconds** | **3.0x faster** |
-| Gnark | ~3.0 seconds | 7.7x faster |
-| Expander | ~5.0 seconds | 4.6x faster |
+| **Noir + Sonobe Folding** | **~81.0 seconds** | **1.15x slower** |
+| Gnark | ~3.0 seconds | 23.3x faster |
+| Expander | ~5.0 seconds | 14.0x faster |
 
 ## Key Advantages
 
@@ -103,6 +103,6 @@ EVM Chain Verification
 - Nova folding scheme is perfectly compatible with ChaCha20 Noir circuits
 - Decider proof generation and verification functions properly
 - Solidity verifier framework is ready
-- Performance is excellent with 3x improvement over traditional Noir
+- Performance is comparable to traditional Noir with unique folding advantages
 
 This integration solution provides a powerful approach for efficiently verifying complex cryptographic computations on blockchain.

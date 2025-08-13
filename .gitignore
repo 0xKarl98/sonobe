@@ -16,3 +16,10 @@ examples/*.calldata
 examples/*.inputs
 *.serialized
 */*.serialized
+
+# Temporary compilation files
+_var_folders_*
+*.bin
+output/
+test.sol
+test_sol_Test.bin

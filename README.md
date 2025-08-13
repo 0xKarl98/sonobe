@@ -23,11 +23,11 @@ cargo run --example chacha20_performance_test --release
 ```
 This test uses genuine Noir compiled circuits for fair comparison:
 - 8 proof generations
-- Total time ~1.7 seconds (proving only)
-- Average ~212ms per proof
-- **41.2x faster** than traditional Barretenberg
-- **1.8x faster** than Gnark
-- **2.9x faster** than Expander
+- Total time ~81 seconds (IVC folding + Decider proving)
+- Average ~10.1s per complete proof
+- **1.15x slower** than traditional Barretenberg
+- **27x slower** than Gnark
+- **16x slower** than Expander
 
 #### 2. Noir ChaCha20 Folding Demo
 ```bash
@@ -51,20 +51,20 @@ cargo run --example chacha20_folding --release
 | ZK Proof System | Time | Relative Performance |
 |----------------|------|---------------------|
 | **Barretenberg (Noir)** | ~70s | Baseline |
-| **Noir + Sonobe Folding** | **~1.7s** | **41.2x Speedup** |
+| **Noir + Sonobe Folding** | **~81s** | **1.15x Slower** |
 | **Gnark** | ~3s | 23x Speedup |
 | **Expander (Multi-thread)** | ~5s | 14x Speedup |
 | Rust + Sonobe Folding | ~142s | 0.5x (Slower) |
 
 ### 🎯 **Key Advantages of Noir + Folding**
 
-- **🚀 Ultra-Fast Performance**: 41.2x faster than traditional Barretenberg (Noir)
-- **🏆 Best-in-Class**: Even faster than Gnark (1.8x) and Expander (2.9x)
 - **📏 Constant Proof Size**: O(1) regardless of computation steps
 - **💾 Memory Efficiency**: Constant memory usage
-- **⚡ Fast Verification**: ~18ms independent of computation size
+- **⚡ Fast Verification**: ~134ms independent of computation size
 - **🔗 Noir Integration**: Direct use of Noir circuits without reimplementation
 - **🧩 Composability**: Easy integration with other circuits
+- **🔄 Incremental Verification**: Can verify intermediate states at any step
+- **⛓️ On-chain Verification**: Generates Solidity verifier contracts
 
 ## 🏗️ Project Structure
 
