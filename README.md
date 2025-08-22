@@ -1,183 +1,62 @@
-# Sonobe - ChaCha20 Folding Schemes Integration
+# ChaCha20 + Sonobe Folding + Solidity Verifier Integration
 
-This project demonstrates the integration of ChaCha20 cryptographic algorithm with Sonobe's folding schemes to achieve efficient Incremental Verifiable Computation (IVC).
+This project demonstrates how to integrate ChaCha20 Noir circuits with Sonobe folding schemes and generate Solidity verifiers for on-chain verification.
 
-## 🚀 Quick Start
+## Quick Start
 
-### Compile Noir Circuit
+### 1. Run Basic Nova Folding Scheme
+
 ```bash
-cd noir-chacha20-folding
-nargo compile
-cd ..
+cargo run --example chacha20_performance_test
 ```
 
-### Run Tests and Benchmarks
+### 2. Enable Solidity Verifier (Optional)
 
-- **`chacha20_performance_test`**: ✅ **Recommended** - Uses genuine Noir compiled circuits for fair comparison with other ZK systems
-- **`chacha20_noir_folding`**: ✅ Alternative demo - Shows Noir + Folding integration with detailed steps
-- **`chacha20_folding`**: ⚠️ Uses Rust reimplementations, not true Noir circuits (for reference only)
+If you want complete Solidity verifier functionality, install the Solidity compiler:
 
-#### 1. Noir ChaCha20 Performance Test (Recommended)
 ```bash
-cargo run --example chacha20_performance_test --release
-```
-This test uses genuine Noir compiled circuits for fair comparison:
-- 8 proof generations
-- Total time ~81 seconds (IVC folding + Decider proving)
-- Average ~10.1s per complete proof
-- **1.15x slower** than traditional Barretenberg
-- **27x slower** than Gnark
-- **16x slower** than Expander
+# Install solc
+npm install -g solc
 
-#### 2. Noir ChaCha20 Folding Demo
-```bash
-cargo run --example chacha20_noir_folding --release
-```
-This test demonstrates Noir + Folding integration:
-- 10 incremental computation steps
-- Average ~242ms per step
-- Constant-size proofs
-- Fast verification (~21ms)
-
-#### 3. Basic ChaCha20 Folding Example
-```bash
-cargo run --example chacha20_folding --release
-```
-
-## 📊 Performance Comparison
-
-### ChaCha20 Proof Generation Time Comparison (8 proofs)
-
-| ZK Proof System | Time | Relative Performance |
-|----------------|------|---------------------|
-| **Barretenberg (Noir)** | ~70s | Baseline |
-| **Noir + Sonobe Folding** | **~81s** | **1.15x Slower** |
-| **Gnark** | ~3s | 23x Speedup |
-| **Expander (Multi-thread)** | ~5s | 14x Speedup |
-| Rust + Sonobe Folding | ~142s | 0.5x (Slower) |
-
-### 🎯 **Key Advantages of Noir + Folding**
-
-- **📏 Constant Proof Size**: O(1) regardless of computation steps
-- **💾 Memory Efficiency**: Constant memory usage
-- **⚡ Fast Verification**: ~134ms independent of computation size
-- **🔗 Noir Integration**: Direct use of Noir circuits without reimplementation
-- **🧩 Composability**: Easy integration with other circuits
-- **🔄 Incremental Verification**: Can verify intermediate states at any step
-- **⛓️ On-chain Verification**: Generates Solidity verifier contracts
-
-## 🏗️ Project Structure
+# Then uncomment Solidity-related code in chacha20_performance_test.rs
+# Currently they have been activated  
 
 ```
-├── examples/
-│   ├── chacha20_performance_test.rs  # Genuine Noir circuit performance test (Recommended)
-│   ├── chacha20_noir_folding.rs     # Noir + Folding integration demo
-│   └── chacha20_folding.rs          # Basic folding example (Rust implementation)
-├── noir-chacha20-folding/           # Noir ChaCha20 IVC circuit
-│   ├── src/main.nr                  # State transition circuit
-│   └── target/chacha20_folding.json # Compiled circuit
-└── noir-symmetric-crypto/           # ChaCha20 Noir library
-    └── noir-symmetric-crypto/
-        └── src/
-            ├── chacha20/            # ChaCha20 implementation
-            └── lib.nr              # Library entry point
+
+## Performance Comparison
+
+Performance test results based on 8 ChaCha20 proofs:
+
+| ZK Proof System | Time (8 proofs) | Relative Performance |
+|----------------|-----------------|---------------------|
+| Barretenberg (Noir) | ~70.0 seconds | Baseline |
+| **Noir + Sonobe Folding** | **~81.0 seconds** | **1.15x slower** |
+| Gnark | ~3.0 seconds | 23.3x faster |
+| Expander | ~5.0 seconds | 14.0x faster |
+
+
+## Technical Architecture
+
+```
+ChaCha20 Noir Circuit
+        ↓
+Sonobe Nova Folding Scheme
+        ↓
+Decider Proof Generation
+        ↓
+Solidity Verifier Contract
+        ↓
+EVM Chain Verification
 ```
 
-## 🔧 Technical Details
+## Detailed Time Breakdown
 
-### IVC State Transition Circuit
+- **Setup**: 63.2s (42.4%) - Nova and Decider preprocessing
+- **Init**: 4.3s (2.9%) - Folding scheme initialization
+- **Proving**: 23.0s (15.5%) - 8-step Nova folding
+- **IVC Verification**: 138ms (0.1%) - Incremental verification
+- **Decider Proving**: 58.2s (39.0%) - Final proof generation
+- **Decider Verification**: 143ms (0.1%) - Final verification
 
-`noir-chacha20-folding/src/main.nr` implements ChaCha20 IVC state transitions:
+**Total Time**: 149.0 seconds
 
-```noir
-fn main(
-    current_state: Field,
-    plaintext_word: Field, 
-    step_counter: Field
-) -> Field {
-    // ChaCha20 encryption + state accumulation
-    let next_state = current_state + ciphertext_word;
-    next_state
-}
-```
-
-### Folding Schemes Integration
-
-Implemented using Nova folding scheme:
-- **Setup**: KZG + Pedersen commitments
-- **Frontend**: NoirFCircuit integration
-- **Backend**: Grumpkin + BN254 elliptic curves
-
-## 🎯 Use Cases
-
-**Suitable for Folding:**
-- Large-scale continuous computation (>10 steps)
-- Streaming data encryption
-- Applications requiring constant proof size
-- Memory-constrained environments
-
-**Suitable for Traditional Approaches:**
-- Small number of independent computations (<5 proofs)
-- Scenarios requiring parallel processing
-- Applications with extreme single-proof time requirements
-
-## 📈 Benchmark Notes
-
-- **Performance Testing**: Use `chacha20_performance_test` for genuine Noir circuit performance comparison
-- **Integration Demo**: `chacha20_noir_folding` demonstrates Noir + Folding integration workflow
-- **Reference Implementation**: `chacha20_folding` shows basic Rust implementation (for reference only)
-- **Baseline Comparison**: Fair performance comparison with Barretenberg, Gnark, and Expander using real Noir circuits
-
-## 🔍 Verification Results
-
-All tests include complete verification workflows, ensuring:
-- ✅ Computational correctness
-- ✅ Proof validity
-- ✅ State consistency
-- ✅ Incremental verification
-- ✅ **EVM/Solidity verification** (chacha20_performance_test)
-
-### 🔗 Solidity Verifier Integration
-
-The `chacha20_performance_test` example includes **complete Solidity verifier generation** for on-chain verification:
-
-**Generated Files:**
-- `NovaDecider.sol` - Complete Solidity verifier contract (~37KB)
-- `calldata.txt` - Formatted calldata for on-chain verification
-
-**EVM Verification Features:**
-- ✅ Automatic Solidity contract generation
-- ✅ EVM simulation verification
-- ✅ Ready-to-deploy contracts
-- ✅ Gas-optimized verification
-- ✅ Compatible with all EVM chains
-
-**Usage:**
-```bash
-cargo run --example chacha20_performance_test --release
-# Generates: NovaDecider.sol + calldata.txt
-# EVM verification result: true
-```
-
-The generated Solidity verifier enables **trustless on-chain verification** of ChaCha20 folding proofs, making it suitable for blockchain applications requiring cryptographic computation verification.
-
----
-
-The `chacha20_performance_test` demonstrates that **Noir + Sonobe Folding** achieves an incredible **41.2x speedup** compared to traditional Barretenberg (Noir) for 8 ChaCha20 proofs (1.7s vs 70s), and remarkably outperforms even Gnark (1.8x faster) and Expander (2.9x faster), while maintaining constant proof size and memory usage.
-
-### 📊 Latest Benchmark Results
-
-**Performance Breakdown (chacha20_performance_test):**
-- **Setup Time**: ~482ms
-- **Initialization**: ~346ms  
-- **Proving (8 steps)**: ~1.7s
-- **Verification**: ~18ms
-- **Total Time**: ~2.54s
-
-**Key Metrics:**
-- Average proving time per step: **212ms**
-- Verification time: **17.6ms** (constant)
-- Memory usage: **Constant** (independent of steps)
-- Proof size: **Constant** (O(1))
-
-**Note**: We recommend using `chacha20_performance_test` for real performance evaluation, as it uses genuine Noir compiled circuits for fair comparison with other ZK proof systems.
